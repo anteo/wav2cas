@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+require 'wav2cas'
+require 'optparse'
+
+options = {}
+
+optparse = OptionParser.new do |opt|
+  opt.banner = "Usage: #{__FILE__} [options] <input.wav>"
+  opt.on("-o FILENAME", "--output FILENAME", "Output file") { |v| options[:output] = v }
+  opt.on("-s N", "--skip N", Float, "Skip N seconds from the beginning of file") { |v| options[:skip] = v }
+  opt.on("-l", "--no-lead-tone", "Audio doesn't start from lead tone (use to recover corrupted records)") { options[:no_lead_tone] = true }
+  opt.on("-a", "--auto-align", "Try to align when clock frequency is lost (could fix some records)") { |v| options[:auto_align] = true }
+  opt.on("-t THRESHOLD", "--threshold THRESHOLD", Integer, "Peak detection threshold (5-30). Default: 10") { |v| options[:peak_threshold] = v }
+  opt.on("-d", "--debug", "Print out some debug information") { |v| options[:debug] = v }
+end
+
+begin
+  optparse.parse!
+  raise OptionParser::MissingArgument, "input file" if ARGV.empty?
+  file_name = ARGV[0]
+  raise OptionParser::InvalidArgument, "input file doesn't exist" unless File.exists?(file_name)
+rescue OptionParser::ParseError
+  puts $!.to_s
+  puts optparse
+  exit
+end
+
+options[:output] ||= File.join(File.dirname(file_name), File.basename(file_name, ".wav") + ".cas")
+
+converter = Wav2Cas.new(file_name,
+                        skip_seconds:   options[:skip],
+                        has_lead_tone:  !options[:no_lead_tone],
+                        auto_align:     options[:auto_align],
+                        peak_threshold: options[:peak_threshold] || 10,
+                        debug:          options[:debug])
+
+converter.convert_to(options[:output])
