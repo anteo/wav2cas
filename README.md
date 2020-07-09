@@ -22,7 +22,6 @@ gem install wav2cas
 
 ```
 Usage: wav2cas [options] <input.wav>
-    -d, --double                     Double density
     -o, --output FILENAME            Output file
     -s, --skip N                     Skip N seconds from the beginning of file
     -l, --no-lead-tone               Audio doesn't start from lead tone (use to recover corrupted records)
